@@ -74,7 +74,7 @@ class MSDeformAttn(nn.Module):
 
     def _reset_parameters(self) -> None:
         constant_(self.sampling_offsets.weight.data, 0.0)
-        thetas = torch.arange(self.n_heads, dtype=torch.float32) * (2.0 * math.pi / self.n_heads)
+        thetas = torch.arange(self.n_heads, dtype=torch.get_default_dtype()) * (2.0 * math.pi / self.n_heads)
         grid_init = torch.stack([thetas.cos(), thetas.sin()], -1)
         grid_init = (
             (grid_init / grid_init.abs().max(-1, keepdim=True)[0])

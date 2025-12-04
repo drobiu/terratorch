@@ -20,6 +20,7 @@ from terratorch.datasets.utils import (
 
 class MPv4gerSegNonGeo(NonGeoDataset):
     """NonGeo dataset implementation for [M-PV4GER-SEG](https://github.com/ServiceNow/geo-bench?tab=readme-ov-file)."""
+
     all_band_names = ("BLUE", "GREEN", "RED")
 
     rgb_bands = ("RED", "GREEN", "BLUE")
@@ -111,8 +112,7 @@ class MPv4gerSegNonGeo(NonGeoDataset):
         lat_str, lon_str = image_id.split(",")
         latitude = float(lat_str)
         longitude = float(lon_str)
-        return torch.tensor([latitude, longitude], dtype=torch.float32)
-
+        return torch.tensor([latitude, longitude], dtype=torch.get_default_dtype())
 
     def plot(self, sample: dict[str, torch.Tensor], suptitle: str | None = None) -> plt.Figure:
         """Plot a sample from the dataset.

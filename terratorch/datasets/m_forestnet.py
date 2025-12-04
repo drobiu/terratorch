@@ -11,17 +11,18 @@ import numpy as np
 import pandas as pd
 import torch
 from albumentations.pytorch import ToTensorV2
+from torchgeo.datasets import NonGeoDataset
 
 from terratorch.datasets.utils import (
     clip_image,
     default_transform,
     validate_bands,
 )
-from torchgeo.datasets import NonGeoDataset
 
 
 class MForestNetNonGeo(NonGeoDataset):
     """NonGeo dataset implementation for [M-ForestNet](https://github.com/ServiceNow/geo-bench?tab=readme-ov-file)."""
+
     all_band_names = (
         "BLUE",
         "GREEN",
@@ -133,13 +134,13 @@ class MForestNetNonGeo(NonGeoDataset):
         lat_str, lon_str, _ = image_id.split("_", 2)
         latitude = float(lat_str)
         longitude = float(lon_str)
-        return torch.tensor([latitude, longitude], dtype=torch.float32)
+        return torch.tensor([latitude, longitude], dtype=torch.get_default_dtype())
 
     def _get_date(self, image_id: str) -> torch.Tensor:
         _, _, date_str = image_id.split("_", 2)
         date = pd.to_datetime(date_str, format="%Y_%m_%d")
 
-        return torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.float32)
+        return torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.get_default_dtype())
 
     def plot(self, sample: dict[str, torch.Tensor], suptitle: str | None = None) -> plt.Figure:
         """Plot a sample from the dataset.

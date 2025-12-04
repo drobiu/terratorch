@@ -5,12 +5,14 @@ e.g. cropping out areas around model prediction to reduce artifacts
 It additionally rebatches after the fold operation to gain speed up.
 """
 
-import torch
-import tqdm
 import math
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
+
+import torch
+import tqdm
+
 from terratorch.models.utils import pad_images
 
 
@@ -44,7 +46,7 @@ def get_blend_mask(
 
     # Vertical window
     y_pos = torch.arange(h_crop - 2 * delta, device="cpu")
-    y = torch.ones_like(y_pos, dtype=torch.float)
+    y = torch.ones_like(y_pos, dtype=torch.get_default_dtype())
     if overlap_h:
         # ramp = (torch.cos(math.pi * (y_pos[:overlap_w] + 1) / (overlap_w + 1) / 2))
         ramp = torch.cos(math.pi * (y_pos[:overlap_h] + 1) / (overlap_h + 1)) / 2 + 0.5
@@ -53,7 +55,7 @@ def get_blend_mask(
 
     # Horizontal window
     x_pos = torch.arange(w_crop - 2 * delta, device="cpu")
-    x = torch.ones_like(x_pos, dtype=torch.float)
+    x = torch.ones_like(x_pos, dtype=torch.get_default_dtype())
     if overlap_w:
         # ramp = (torch.cos(math.pi * (x_pos[:overlap_w] + 1) / (overlap_w + 1) / 2))
         ramp = torch.cos(math.pi * (x_pos[:overlap_w] + 1) / (overlap_w + 1)) / 2 + 0.5
@@ -110,9 +112,11 @@ def get_input_chips(
         inner_blend_mask = get_blend_mask(h_crop, h_stride, w_crop, w_stride, delta)
         border_blend_mask = inner_blend_mask if padding else get_blend_mask(h_crop, h_stride, w_crop, w_stride)
     else:
-        inner_blend_mask = torch.ones((h_crop - 2 * delta, w_crop - 2 * delta), device="cpu", dtype=torch.float)
+        inner_blend_mask = torch.ones(
+            (h_crop - 2 * delta, w_crop - 2 * delta), device="cpu", dtype=torch.get_default_dtype()
+        )
         border_blend_mask = (
-            inner_blend_mask if padding else torch.ones((h_crop, w_crop), device="cpu", dtype=torch.float)
+            inner_blend_mask if padding else torch.ones((h_crop, w_crop), device="cpu", dtype=torch.get_default_dtype())
         )
 
     input_batch_size = input_batch.shape[0]
@@ -127,7 +131,7 @@ def get_input_chips(
             InferenceInput(
                 b,
                 (slice(i + delta, i + h_crop - delta), slice(w_img - w_crop + delta, w_img - delta))
-                if padding 
+                if padding
                 else (slice(i, i + h_crop), slice(w_img - w_crop, w_img)),
                 patch[b],
                 border_blend_mask,
@@ -142,8 +146,8 @@ def get_input_chips(
         coordinates_and_inputs += [
             InferenceInput(
                 b,
-                (slice(h_img - h_crop + delta, h_img - delta), slice(i + delta, i + w_crop - delta)) 
-                if padding 
+                (slice(h_img - h_crop + delta, h_img - delta), slice(i + delta, i + w_crop - delta))
+                if padding
                 else (slice(h_img - h_crop, h_img), slice(i, i + w_crop)),
                 patch[b],
                 border_blend_mask,
@@ -157,8 +161,8 @@ def get_input_chips(
     coordinates_and_inputs += [
         InferenceInput(
             b,
-            (slice(h_img - h_crop + delta, h_img - delta), slice(w_img - w_crop + delta, w_img - delta)) 
-            if padding 
+            (slice(h_img - h_crop + delta, h_img - delta), slice(w_img - w_crop + delta, w_img - delta))
+            if padding
             else (slice(h_img - h_crop, h_img), slice(w_img - w_crop, w_img)),
             patch[b],
             border_blend_mask,
@@ -176,7 +180,7 @@ def get_input_chips(
                     InferenceInput(
                         b,
                         (slice(row + delta, row + h_crop - delta), slice(col + delta, col + w_crop - delta))
-                        if padding 
+                        if padding
                         else (slice(row, row + h_crop), slice(col, col + w_crop)),
                         patch[b],
                         border_blend_mask,
@@ -273,7 +277,7 @@ def tiled_inference(
         if len(set(img_shapes)) != 1:
             raise ValueError(
                 f"Tensors in input dict must have the same height and width for tiled inference, "
-                f"found {dict(zip(modalities, img_shapes))}"
+                f"found {dict(zip(modalities, img_shapes, strict=False))}"
             )
         t_dims = [len(t.shape) for t in tensors]
         if len(set(t_dims)) != 1:
@@ -285,24 +289,29 @@ def tiled_inference(
         # Tiled inference is implemented for single tensors.
         # We concatenate all tensors and reshape them before the model forward
         t_dims = t_dims[0]
-        if t_dims == 4: # B, C, H, W
+        if t_dims == 4:  # B, C, H, W
             channel_length = [t.shape[-3] for t in tensors]
             channel_start = torch.tensor([0] + channel_length).cumsum(0)
             input_batch = torch.concat(tensors, dim=-3)
-        elif t_dims == 5:# B, C, T, H, W
+        elif t_dims == 5:  # B, C, T, H, W
             channel_length = [t.shape[-4] for t in tensors]
             channel_start = torch.tensor([0] + channel_length).cumsum(0)
             input_batch = torch.concat(tensors, dim=-4)
         else:
-            raise ValueError(f"Tensors must have 4 or 5 dimensions")
-
+            raise ValueError("Tensors must have 4 or 5 dimensions")
 
         def tensor_reshape(t):
             # Convert tensor back to dict of tensors
-            if t_dims == 4: # B, C, H, W
-                out = {m: t[..., s:s+l, :, :] for m, s, l in zip(modalities, channel_start, channel_length)}
-            elif t_dims == 5:# B, C, T, H, W
-                out = {m: t[..., s:s+l, :, :, :] for m, s, l in zip(modalities, channel_start, channel_length)}
+            if t_dims == 4:  # B, C, H, W
+                out = {
+                    m: t[..., s : s + l, :, :]
+                    for m, s, l in zip(modalities, channel_start, channel_length, strict=False)
+                }
+            elif t_dims == 5:  # B, C, T, H, W
+                out = {
+                    m: t[..., s : s + l, :, :, :]
+                    for m, s, l in zip(modalities, channel_start, channel_length, strict=False)
+                }
             return out
 
     elif isinstance(input_batch, torch.Tensor):

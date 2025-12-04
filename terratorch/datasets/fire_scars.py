@@ -25,6 +25,7 @@ from terratorch.datasets.utils import clip_image_percentile, default_transform, 
 
 class FireScarsNonGeo(NonGeoDataset):
     """NonGeo dataset implementation for [fire scars](https://huggingface.co/datasets/ibm-nasa-geospatial/hls_burn_scars)."""
+
     all_band_names = (
         "BLUE",
         "GREEN",
@@ -39,7 +40,7 @@ class FireScarsNonGeo(NonGeoDataset):
     BAND_SETS = {"all": all_band_names, "rgb": rgb_bands}
 
     num_classes = 2
-    splits = {"train": "training", "val": "validation"}   # Only train and val splits available
+    splits = {"train": "training", "val": "validation"}  # Only train and val splits available
 
     def __init__(
         self,
@@ -101,7 +102,7 @@ class FireScarsNonGeo(NonGeoDataset):
         year = int(date_str[:4])
         julian_day = int(date_str[4:])
 
-        return torch.tensor([[year, julian_day]], dtype=torch.float32)
+        return torch.tensor([[year, julian_day]], dtype=torch.get_default_dtype())
 
     def _get_coords(self, image: DataArray) -> torch.Tensor:
         px = image.x.shape[0] // 2
@@ -113,7 +114,7 @@ class FireScarsNonGeo(NonGeoDataset):
 
         lat_lon = np.asarray([point.y[0], point.x[0]])
 
-        return torch.tensor(lat_lon, dtype=torch.float32)
+        return torch.tensor(lat_lon, dtype=torch.get_default_dtype())
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         image = self._load_file(self.image_files[index], nan_replace=self.no_data_replace)
@@ -132,8 +133,9 @@ class FireScarsNonGeo(NonGeoDataset):
 
         output = {
             "image": image.astype(np.float32),
-            "mask": self._load_file(
-                self.segmentation_mask_files[index], nan_replace=self.no_label_replace).to_numpy()[0],
+            "mask": self._load_file(self.segmentation_mask_files[index], nan_replace=self.no_label_replace).to_numpy()[
+                0
+            ],
         }
         if self.transform:
             output = self.transform(**output)

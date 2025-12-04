@@ -21,6 +21,7 @@ from terratorch.datasets.utils import (
 
 class MBeninSmallHolderCashewsNonGeo(NonGeoDataset):
     """NonGeo dataset implementation for [M-BeninSmallHolderCashews](https://github.com/ServiceNow/geo-bench?tab=readme-ov-file)."""
+
     all_band_names = (
         "COASTAL_AEROSOL",
         "BLUE",
@@ -105,10 +106,10 @@ class MBeninSmallHolderCashewsNonGeo(NonGeoDataset):
                 date_str = match.group()
                 break
 
-        date = torch.zeros((1, 2), dtype=torch.float32)
+        date = torch.zeros((1, 2), dtype=torch.get_default_dtype())
         if date_str:
             date = pd.to_datetime(date_str, format="%Y-%m-%d")
-            date = torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.float32)
+            date = torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.get_default_dtype())
 
         return date
 
@@ -154,7 +155,8 @@ class MBeninSmallHolderCashewsNonGeo(NonGeoDataset):
 
         image = sample["image"]
         mask = sample["mask"].numpy()
-        if (len(mask.shape) == 3) & (mask.shape[0] == 1): mask = mask[0] 
+        if (len(mask.shape) == 3) & (mask.shape[0] == 1):
+            mask = mask[0]
 
         if torch.is_tensor(image):
             image = image.permute(1, 2, 0).numpy()  # (H, W, C)

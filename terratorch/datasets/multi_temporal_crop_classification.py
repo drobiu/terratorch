@@ -160,7 +160,7 @@ class MultiTemporalCropClassification(NonGeoDataset):
             date = pd.to_datetime(date_str)
             temporal_coords.append([date.year, date.dayofyear - 1])
 
-        return torch.tensor(temporal_coords, dtype=torch.float32)
+        return torch.tensor(temporal_coords, dtype=torch.get_default_dtype())
 
     def _get_coords(self, image: DataArray) -> torch.Tensor:
         px = image.x.shape[0] // 2
@@ -172,7 +172,7 @@ class MultiTemporalCropClassification(NonGeoDataset):
 
         lat_lon = np.asarray([point.y[0], point.x[0]])
 
-        return torch.tensor(lat_lon, dtype=torch.float32)
+        return torch.tensor(lat_lon, dtype=torch.get_default_dtype())
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         image = self._load_file(self.image_files[index], nan_replace=self.no_data_replace)
@@ -196,8 +196,9 @@ class MultiTemporalCropClassification(NonGeoDataset):
 
         output = {
             "image": image.astype(np.float32),
-            "mask": self._load_file(
-                self.segmentation_mask_files[index], nan_replace=self.no_label_replace).to_numpy()[0],
+            "mask": self._load_file(self.segmentation_mask_files[index], nan_replace=self.no_label_replace).to_numpy()[
+                0
+            ],
         }
 
         if self.reduce_zero_label:

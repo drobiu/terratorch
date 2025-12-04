@@ -21,6 +21,7 @@ from terratorch.datasets.utils import (
 
 class MNzCattleNonGeo(NonGeoDataset):
     """NonGeo dataset implementation for [M-NZ-Cattle](https://github.com/ServiceNow/geo-bench?tab=readme-ov-file)."""
+
     all_band_names = ("BLUE", "GREEN", "RED")
 
     rgb_bands = ("RED", "GREEN", "BLUE")
@@ -120,13 +121,13 @@ class MNzCattleNonGeo(NonGeoDataset):
         if match:
             longitude, latitude = map(float, match.groups())
 
-        return torch.tensor([latitude, longitude], dtype=torch.float32)
+        return torch.tensor([latitude, longitude], dtype=torch.get_default_dtype())
 
     def _get_date(self, band_name: str) -> torch.Tensor:
         date_str = band_name.split("_")[-1]
         date = pd.to_datetime(date_str, format="%Y-%m-%d")
 
-        return torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.float32)
+        return torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.get_default_dtype())
 
     def plot(self, sample: dict[str, torch.Tensor], suptitle: str | None = None) -> plt.Figure:
         """Plot a sample from the dataset.

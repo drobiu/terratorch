@@ -19,6 +19,7 @@ from terratorch.datasets.utils import (
 
 class MBigEarthNonGeo(NonGeoDataset):
     """NonGeo dataset implementation for [M-BigEarthNet](https://github.com/ServiceNow/geo-bench?tab=readme-ov-file)."""
+
     all_band_names = (
         "COASTAL_AEROSOL",
         "BLUE",
@@ -110,7 +111,7 @@ class MBigEarthNonGeo(NonGeoDataset):
             image = np.stack(bands, axis=-1)
 
         labels_vector = self.label_map[image_id]
-        labels_tensor = torch.tensor(labels_vector, dtype=torch.float)
+        labels_tensor = torch.tensor(labels_vector, dtype=torch.get_default_dtype())
 
         output = {"image": image}
 

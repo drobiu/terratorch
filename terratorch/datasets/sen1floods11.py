@@ -25,19 +25,19 @@ class Sen1Floods11NonGeo(NonGeoDataset):
     """NonGeo dataset implementation for [sen1floods11](https://github.com/cloudtostreet/Sen1Floods11)."""
 
     all_band_names = (
-            "COASTAL_AEROSOL",
-            "BLUE",
-            "GREEN",
-            "RED",
-            "RED_EDGE_1",
-            "RED_EDGE_2",
-            "RED_EDGE_3",
-            "NIR_BROAD",
-            "NIR_NARROW",
-            "WATER_VAPOR",
-            "CIRRUS",
-            "SWIR_1",
-            "SWIR_2",
+        "COASTAL_AEROSOL",
+        "BLUE",
+        "GREEN",
+        "RED",
+        "RED_EDGE_1",
+        "RED_EDGE_2",
+        "RED_EDGE_3",
+        "NIR_BROAD",
+        "NIR_NARROW",
+        "WATER_VAPOR",
+        "CIRRUS",
+        "SWIR_1",
+        "SWIR_2",
     )
     rgb_bands = ("RED", "GREEN", "BLUE")
     BAND_SETS = {"all": all_band_names, "rgb": rgb_bands}
@@ -131,15 +131,14 @@ class Sen1Floods11NonGeo(NonGeoDataset):
         else:
             date = pd.to_datetime(self.metadata[self.metadata["location"] == location]["s2_date"].item())
 
-        return torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.float32)  # (n_timesteps, coords)
+        return torch.tensor([[date.year, date.dayofyear - 1]], dtype=torch.get_default_dtype())  # (n_timesteps, coords)
 
     def _get_coords(self, image: DataArray) -> torch.Tensor:
-
         center_lat = image.y[image.y.shape[0] // 2]
         center_lon = image.x[image.x.shape[0] // 2]
         lat_lon = np.asarray([center_lat, center_lon])
 
-        return torch.tensor(lat_lon, dtype=torch.float32)
+        return torch.tensor(lat_lon, dtype=torch.get_default_dtype())
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         image = self._load_file(self.image_files[index], nan_replace=self.no_data_replace)
@@ -158,8 +157,9 @@ class Sen1Floods11NonGeo(NonGeoDataset):
 
         output = {
             "image": image.astype(np.float32) * self.constant_scale,
-            "mask": self._load_file(
-                self.segmentation_mask_files[index], nan_replace=self.no_label_replace).to_numpy()[0],
+            "mask": self._load_file(self.segmentation_mask_files[index], nan_replace=self.no_label_replace).to_numpy()[
+                0
+            ],
         }
         if self.transform:
             output = self.transform(**output)
