@@ -1,4 +1,4 @@
-# Glossary of terms used in this Documentation and in the Geospatial AI area
+# Glossary of terms used in this documentation and in the Geospatial AI area
 
 ## Encoder
 The neural network used to map between the inputs and the intermdiary stage (usually referred as embedding

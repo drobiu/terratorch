@@ -6,9 +6,11 @@ This module contains generic data modules for instantiation at runtime.
 
 import logging
 import os
+from albumentations.core.composition import BaseCompose
+from albumentations.core.composition import Compose
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import albumentations as A
 import kornia.augmentation as K
@@ -52,24 +54,23 @@ class Normalize(Callable):
         self.means = means
         self.stds = stds
 
-    def __call__(self, batch):
-        # min_value = self.means - 2 * self.stds
-        # max_value = self.means + 2 * self.stds
-        # img = (batch["image"] - min_value) / (max_value - min_value)
-        # img = torch.clip(img, 0, 1)
-        # batch["image"] = img
-        # return batch
+    def __call__(self, batch, denormalize=False):
         image = batch["image"]
         if len(image.shape) == 5:
+            # B, C, T, H, W
             means = torch.tensor(self.means, device=image.device).view(1, -1, 1, 1, 1)
             stds = torch.tensor(self.stds, device=image.device).view(1, -1, 1, 1, 1)
         elif len(image.shape) == 4:
+            # B, C, H, W
             means = torch.tensor(self.means, device=image.device).view(1, -1, 1, 1)
             stds = torch.tensor(self.stds, device=image.device).view(1, -1, 1, 1)
         else:
             msg = f"Expected batch to have 5 or 4 dimensions, but got {len(image.shape)}"
             raise Exception(msg)
-        batch["image"] = (image - means) / stds
+        if denormalize:
+            batch["image"] = image * stds + means
+        else:
+            batch["image"] = (image - means) / stds
         return batch
 
 
@@ -106,9 +107,9 @@ class GenericNonGeoSegmentationDataModule(NonGeoDataModule):
         predict_output_bands: list[HLSBands | int | tuple[int, int] | str] | None = None,
         constant_scale: float = 1,
         rgb_indices: list[int] | None = None,
-        train_transform: A.Compose | None | list[A.BasicTransform] = None,
-        val_transform: A.Compose | None | list[A.BasicTransform] = None,
-        test_transform: A.Compose | None | list[A.BasicTransform] = None,
+        train_transform: list[Any] | bool | None = None,
+        val_transform: list[Any] | bool | None = None,
+        test_transform: list[Any] | bool | None = None,
         expand_temporal_dimension: bool = False,
         reduce_zero_label: bool = False,
         no_data_replace: float | None = None,
@@ -371,9 +372,9 @@ class GenericNonGeoPixelwiseRegressionDataModule(NonGeoDataModule):
         predict_output_bands: list[HLSBands | int | tuple[int, int] | str] | None = None,
         constant_scale: float = 1,
         rgb_indices: list[int] | None = None,
-        train_transform: A.Compose | None | list[A.BasicTransform] = None,
-        val_transform: A.Compose | None | list[A.BasicTransform] = None,
-        test_transform: A.Compose | None | list[A.BasicTransform] = None,
+        train_transform: Optional[List[Any]] = None,
+        val_transform: Optional[List[Any]] = None,
+        test_transform: Optional[List[Any]] = None,
         expand_temporal_dimension: bool = False,
         reduce_zero_label: bool = False,
         no_data_replace: float | None = None,
