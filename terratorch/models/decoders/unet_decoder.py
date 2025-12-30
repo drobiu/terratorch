@@ -16,6 +16,7 @@ class UNetDecoder(nn.Module):
         self,
         embed_dim: list[int],
         channels: list[int],
+        add_center_block: bool,
         use_batchnorm: bool | str | dict[str, Any] = "batchnorm",
         attention_type: str | None = None,
     ):
@@ -24,6 +25,7 @@ class UNetDecoder(nn.Module):
         Args:
             embed_dim (list[int]): Input embedding dimension for each input.
             channels (list[int]): Channels used in the decoder.
+            add_center_block(bool): 
             use_batchnorm (bool, optional): Whether to use batchnorm. Defaults to True.
             attention_type (str | None, optional): Attention type to use. Defaults to None
         """
