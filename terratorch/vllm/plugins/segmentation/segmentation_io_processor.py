@@ -104,7 +104,8 @@ class SegmentationIOProcessor(IOProcessor):
         return TiledInferenceParameters(**tiled_inf_param_dict)
 
     def save_geotiff(self, image: torch.Tensor, meta: dict,
-                 out_format: str, request_id: str = None, out_path: str = None) -> str | bytes:
+                 out_format: str, request_id: str = None, out_path: str = None,
+                 input_filename: str = None, input_data_format: str = None) -> str | bytes:
         """Save multi-band image in Geotiff file.
 
         Args:
@@ -113,13 +114,39 @@ class SegmentationIOProcessor(IOProcessor):
             out_format: output format ('path' or 'b64_json')
             request_id: optional request ID for filename
             out_path: optional custom output directory path
+            input_filename: optional input filename/url/data to derive output filename from
+            input_data_format: format of input_filename ('path', 'url', or 'b64_json')
         """
         if out_format == "path":
             # create temp file
-            if request_id:
+            if input_filename and input_data_format:
+                # Extract filename based on input format
+                if input_data_format == "url":
+                    # For URLs, extract the filename from the URL path
+                    from urllib.parse import urlparse, unquote
+                    parsed_url = urlparse(input_filename)
+                    base_name = os.path.basename(unquote(parsed_url.path))
+                elif input_data_format == "path":
+                    # For file paths, just get the basename
+                    base_name = os.path.basename(input_filename)
+                else:
+                    # For b64_json, use request_id or generate UUID
+                    base_name = None
+                
+                if base_name:
+                    name_without_ext, ext = os.path.splitext(base_name)
+                    # Handle .tif or .tiff extensions, default to .tiff
+                    if ext.lower() not in ['.tif', '.tiff']:
+                        ext = '.tiff'
+                    fname = f"{name_without_ext}_pred{ext}"
+                elif request_id:
+                    fname = f"{request_id}_pred.tiff"
+                else:
+                    fname = f"{str(uuid.uuid4())}_pred.tiff"
+            elif request_id:
                fname = f"{request_id}.tiff"
             else:
-                fname =  f"{str(uuid.uiud4()).tiff}"
+                fname = f"{str(uuid.uuid4())}.tiff"
             # Use custom out_path if provided, otherwise use default plugin config path
             output_dir = out_path if out_path else self.plugin_config.output_path
             file_path = os.path.join(output_dir, fname)
@@ -387,6 +414,8 @@ class SegmentationIOProcessor(IOProcessor):
         self.requests_cache[request_id] = {
             "out_data_format": image_data["out_data_format"],
             "out_path": image_data.get("out_path"),
+            "input_filename": image_data["data"],
+            "input_data_format": image_data["data_format"],
             "meta_data": meta_data[0],
             "original_h": original_h,
             "original_w": original_w,
@@ -495,7 +524,9 @@ class SegmentationIOProcessor(IOProcessor):
         meta_data.update(count=1, dtype="uint8", compress="lzw", nodata=0)
         out_data = self.save_geotiff(self._convert_np_uint8(pred_imgs), meta_data,
                                 request_info["out_data_format"], request_id,
-                                request_info.get("out_path"))
+                                request_info.get("out_path"),
+                                request_info.get("input_filename"),
+                                request_info.get("input_data_format"))
 
         return RequestOutput(data_format=request_info["out_data_format"],
                                   data=out_data,

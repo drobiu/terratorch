@@ -255,7 +255,7 @@ class TerramindSegmentationIOProcessor(IOProcessor):
         if output_format == "path":
             # Use custom out_path if provided, otherwise use default plugin config path
             output_dir = request_info.get("out_path") if request_info.get("out_path") else self.plugin_config.output_path
-            out_file_path = Path(output_dir) / (request_info["filename"] + "_prediction.tif")
+            out_file_path = Path(output_dir) / (request_info["filename"] + "_pred.tif")
             write_tiff(prediction, out_file_path, metadata)
             ret = str(out_file_path.resolve())
         elif output_format == "b64_json":

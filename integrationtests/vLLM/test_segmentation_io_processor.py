@@ -114,6 +114,35 @@ def test_serving_segmentation_plugin(get_server, model_name, input_name):
             f.write(decoded_image)
     else:
         file_name = response["data"]["data"]
+        
+        # Verify the filename contains _pred suffix for path output
+        base_filename = os.path.basename(file_name)
+        assert "_pred" in base_filename, \
+            f"Expected filename to contain '_pred' suffix, but got {base_filename}"
+        
+        # For URL and path inputs, verify the filename is derived from the input
+        if input["data_format"] in ["url", "path"]:
+            image_source = image_url
+            # Handle both string URLs/paths and dict URLs (for terramind)
+            if isinstance(image_source, dict):
+                # For TerraMind models, use DEM URL for filename verification
+                image_source = image_source.get("DEM", next(iter(image_source.values())))
+            
+            if isinstance(image_source, str):
+                # Extract expected base name from URL or path
+                if input["data_format"] == "url":
+                    from urllib.parse import urlparse, unquote
+                    parsed_url = urlparse(image_source)
+                    source_filename = os.path.basename(unquote(parsed_url.path))
+                else:  # path
+                    source_filename = os.path.basename(image_source)
+                
+                name_without_ext, ext = os.path.splitext(source_filename)
+                
+                # Check that the output filename is based on the input filename
+                expected_pattern = f"{name_without_ext}_pred"
+                assert expected_pattern in base_filename, \
+                    f"Expected filename to contain '{expected_pattern}', but got {base_filename}"
 
     # I am using perceptual hashing to absorb minimal variations between the one calculated "at home"
     # and the one generated in the test
