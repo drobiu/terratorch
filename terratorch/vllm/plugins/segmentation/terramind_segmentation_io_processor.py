@@ -208,6 +208,7 @@ class TerramindSegmentationIOProcessor(IOProcessor):
         self.requests_cache[request_id] = {
             "data_format" : prompt_dict["data_format"],
             "out_data_format": prompt_dict["out_data_format"],
+            "out_path": prompt_dict.get("out_path"),
             "dataset_path": dataset_path,
             "prompt_data": prompt_data,
             "h_img": h_img,
@@ -252,7 +253,9 @@ class TerramindSegmentationIOProcessor(IOProcessor):
 
         ret: str
         if output_format == "path":
-            out_file_path = Path(self.plugin_config.output_path) / (request_info["filename"] + "_prediction.tif")
+            # Use custom out_path if provided, otherwise use default plugin config path
+            output_dir = request_info.get("out_path") if request_info.get("out_path") else self.plugin_config.output_path
+            out_file_path = Path(output_dir) / (request_info["filename"] + "_prediction.tif")
             write_tiff(prediction, out_file_path, metadata)
             ret = str(out_file_path.resolve())
         elif output_format == "b64_json":
