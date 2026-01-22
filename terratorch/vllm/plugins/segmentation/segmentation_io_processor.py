@@ -104,13 +104,15 @@ class SegmentationIOProcessor(IOProcessor):
         return TiledInferenceParameters(**tiled_inf_param_dict)
 
     def save_geotiff(self, image: torch.Tensor, meta: dict,
-                 out_format: str, request_id: str = None) -> str | bytes:
+                 out_format: str, request_id: str = None, out_path: str = None) -> str | bytes:
         """Save multi-band image in Geotiff file.
 
         Args:
             image: np.ndarray with shape (bands, height, width)
-            output_path: path where to save the image
             meta: dict with meta info.
+            out_format: output format ('path' or 'b64_json')
+            request_id: optional request ID for filename
+            out_path: optional custom output directory path
         """
         if out_format == "path":
             # create temp file
@@ -118,7 +120,9 @@ class SegmentationIOProcessor(IOProcessor):
                fname = f"{request_id}.tiff"
             else:
                 fname =  f"{str(uuid.uiud4()).tiff}"
-            file_path = os.path.join(self.plugin_config.output_path, fname)
+            # Use custom out_path if provided, otherwise use default plugin config path
+            output_dir = out_path if out_path else self.plugin_config.output_path
+            file_path = os.path.join(output_dir, fname)
             with rasterio.open(file_path, "w", **meta) as dest:
                 for i in range(image.shape[0]):
                     dest.write(image[i, :, :], i + 1)
@@ -382,6 +386,7 @@ class SegmentationIOProcessor(IOProcessor):
             request_id = "offline"
         self.requests_cache[request_id] = {
             "out_data_format": image_data["out_data_format"],
+            "out_path": image_data.get("out_path"),
             "meta_data": meta_data[0],
             "original_h": original_h,
             "original_w": original_w,
@@ -489,7 +494,8 @@ class SegmentationIOProcessor(IOProcessor):
         meta_data = request_info["meta_data"]
         meta_data.update(count=1, dtype="uint8", compress="lzw", nodata=0)
         out_data = self.save_geotiff(self._convert_np_uint8(pred_imgs), meta_data,
-                                request_info["out_data_format"], request_id)
+                                request_info["out_data_format"], request_id,
+                                request_info.get("out_path"))
 
         return RequestOutput(data_format=request_info["out_data_format"],
                                   data=out_data,

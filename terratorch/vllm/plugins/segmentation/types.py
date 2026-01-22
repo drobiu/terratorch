@@ -59,6 +59,13 @@ class RequestData(BaseModel):
     Indices for bands to be processed in the input file
     """
 
+    out_path: Optional[str] = None
+    """
+    Optional output directory path for saving the result file.
+    If not provided, uses the default output_path from plugin configuration.
+    Only applicable when out_data_format is 'path'.
+    """
+
 
 MultiModalPromptType = Union[RequestData]
 
