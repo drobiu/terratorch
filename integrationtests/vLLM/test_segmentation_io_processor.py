@@ -120,3 +120,66 @@ def test_serving_segmentation_plugin(get_server, model_name, input_name):
     image_hash = str(imagehash.phash(Image.open(file_name)))
 
     assert image_hash == models_output[model_name][input_name]
+
+
+@pytest.mark.parametrize(
+    "model_name, input_name", tests_per_model
+)
+def test_serving_segmentation_plugin_with_custom_out_path(get_server, model_name, input_name):
+    """Test that custom out_path in request payload is respected"""
+    model = models[model_name]["location"]
+    io_processor_plugin = models[model_name]["io_processor_plugin"]
+    input = inputs[input_name]
+
+    # Skip test if output format is not 'path'
+    if input["out_data_format"] != "path":
+        pytest.skip("Test only applicable for 'path' output format")
+
+    image_url = input["image_url"]
+    server_args = [
+        "--skip-tokenizer-init",
+        "--enforce-eager",
+        "--max-num-seqs",
+        "8",
+        "--io-processor-plugin",
+        io_processor_plugin,
+        "--model-impl",
+        "terratorch",
+        "--enable-mm-embeds"
+    ]
+
+    server = get_server(model, server_args=server_args)
+    
+    # Create a custom output directory
+    with tempfile.TemporaryDirectory() as custom_out_dir:
+        request_payload = {
+            "data": {
+                "data": image_url,
+                "data_format": input["data_format"],
+                "out_data_format": input["out_data_format"],
+                "out_path": custom_out_dir,
+                "image_format": ""
+            },
+            "model": model,
+            "softmax": False
+        }
+
+        if "indices" in input:
+            request_payload["data"]["indices"] = input["indices"]
+
+        ret = requests.post("http://localhost:8000/pooling", json=request_payload)
+        assert ret.status_code == 200
+
+        response = ret.json()
+        file_name = response["data"]["data"]
+        
+        # Verify the file was saved in the custom directory
+        assert os.path.dirname(file_name) == custom_out_dir, \
+            f"Expected file to be in {custom_out_dir}, but got {os.path.dirname(file_name)}"
+        
+        # Verify the file exists
+        assert os.path.exists(file_name), f"Output file {file_name} does not exist"
+        
+        # Verify the content is correct using perceptual hashing
+        image_hash = str(imagehash.phash(Image.open(file_name)))
+        assert image_hash == models_output[model_name][input_name]
