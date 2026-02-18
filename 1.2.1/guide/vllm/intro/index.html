@@ -2435,27 +2435,30 @@ models using the <code>SemanticSegmentationTask</code> or <code>PixelwiseRegress
 can be served with vLLM.</p>
 <p>TerraTorch models can be served with vLLM in <em>tensor-to-tensor</em> or
 <em>image-to-image</em> mode. The tensor-to-tensor mode is the default mode and is
-natively enabled by vLLM. For the image-to-image mode instead, TerraTorch uses a
-feature in vLLM called
+natively enabled by vLLM. For the image-to-image mode, TerraTorch uses a feature
+in vLLM called
 <a href="https://docs.vllm.ai/en/v0.13.0/design/io_processor_plugins/#writing-an-io-processor-plugin">IOProcessor plugins</a>,
 enabling processing and generation of data in any modality (e.g., geoTiff). In
-TerraTorch we provide pre-defined IOProcessor plugins, check the list
-<a href="../vllm_io_plugins/#available-terratorch-ioprocessor-plugins">here</a>.</p>
-<p>To enable your model to be served via vLLM, follow the below steps:</p>
+TerraTorch, we provide pre-defined IOProcessor plugins. Check the list of
+<a href="../vllm_io_plugins/#available-terratorch-ioprocessor-plugins">available plugins</a>.</p>
+<p>To enable your model to be served via vLLM, follow the steps below:</p>
 <ol>
-<li>Verify the model you want to serve is either already a core model, or learn
-   how to <a href="../../models/#adding-a-new-model">add your model to TerraTorch</a>.</li>
-<li><a href="../prepare_your_model/">Prepare your model for serving with vLLM</a>.</li>
-<li>If serving in image-to-image mode
-   <a href="../vllm_io_plugins/">Learn about IOProcessor plugins</a>, identify an existing
-   one suiting your model or
+<li><strong>Ensure TerraTorch Integration</strong>: Verify the model you want to serve is
+   either already a core model, or learn how to
+   <a href="../../models/#adding-a-new-model">add your model to TerraTorch</a>.</li>
+<li><strong>Create a Model <em>config.json</em></strong>: Create a
+   <a href="../prepare_your_model/">vLLM compatible <em>config.json</em></a>.</li>
+<li><strong>Determine IOProcessor Plugin Needs</strong>: If serving in image-to-image mode,
+   identify an <a href="../vllm_io_plugins/">IOProcessor plugin</a> that suits your model
+   or
    <a href="https://docs.vllm.ai/en/latest/design/io_processor_plugins/">build one yourself</a>.</li>
-<li>Ensure your model weights and config.json are either hosted on Hugging Face,
-   or stored in a local directory and accessible by your vLLM instance.</li>
-<li>Start a vLLM serving instance that loads your model and perform an inference
-   in <a href="../serving_a_model_tensor/">tensor-to-tensor mode</a> or in
-   <a href="../serving_a_model_image/">image-to-image mode</a>.</li>
+<li><strong>Make your Model Accessible to vLLM</strong>: Host your model weights and
+   config.json on Hugging Face, or store them in a local directory accessible by
+   the vLLM instance.</li>
 </ol>
+<p>To validate the steps above, start a vLLM serving instance that loads your model
+and perform an inference in <a href="../serving_a_model_tensor/">tensor-to-tensor mode</a>
+or in <a href="../serving_a_model_image/">image-to-image mode</a>.</p>
 
 
 
@@ -2476,7 +2479,7 @@ TerraTorch we provide pre-defined IOProcessor plugins, check the list
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 16, 2026 14:14:54 UTC">February 16, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 18, 2026 12:55:06 UTC">February 18, 2026</span>
   </span>
 
     
