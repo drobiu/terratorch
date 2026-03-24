@@ -837,7 +837,7 @@ def build_modality_embeddings(modality_info, modalities, cond_modalities=None, i
             key = 'untok_sen2l1c@224'
         elif 'sen1rtc' in modality_renamed:
             key = 'untok_sen1rtc@224'
-        elif 'sen1grd' in modality_renamed:
+        elif 'sen1' in modality_renamed:  # Defaults to S1GRD if not specified
             key = 'untok_sen1grd@224'
         elif 'rgb' in modality_renamed:
             key = 'untok_sen2rgb@224'
@@ -876,7 +876,7 @@ def build_modality_embeddings(modality_info, modalities, cond_modalities=None, i
                 key = 'tok_sen2l2a@224'
             elif 'sen1rtc' in modality_renamed:
                 key = 'tok_sen1rtc@224'
-            elif 'sen1' in modality_renamed:  # Default to S1GRD if not specified
+            elif 'sen1' in modality_renamed:  # Defaults to S1GRD if not specified
                 key = 'tok_sen1grd@224'
             elif 'dem' in modality_renamed:
                 key = 'tok_dem@224'
@@ -916,7 +916,7 @@ def build_output_modality_embeddings(modality_info, modalities, img_size=None, d
             key = 'tok_sen2l2a@224'
         elif 'sen1rtc' in modality_renamed:
             key = 'tok_sen1rtc@224'
-        elif 'sen1' in modality_renamed:  # Default to S1GRD if not specified
+        elif 'sen1' in modality_renamed:  # Defaults to S1GRD if not specified
             key = 'tok_sen1grd@224'
         elif 'dem' in modality_renamed:
             key = 'tok_dem@224'
