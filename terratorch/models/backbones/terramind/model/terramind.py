@@ -824,7 +824,6 @@ def build_modality_embeddings(modality_info, modalities, cond_modalities=None, i
         modality_renamed = (modality.lower()
                             .replace('s2', 'sen2')
                             .replace('s1', 'sen1')
-                            .replace('text', 'caption')
                             .replace('location', 'coords')
                             )
 
@@ -865,7 +864,6 @@ def build_modality_embeddings(modality_info, modalities, cond_modalities=None, i
             modality_renamed = (modality.lower()
                                 .replace('s2', 'sen2')
                                 .replace('s1', 'sen1')
-                                .replace('text', 'caption')
                                 .replace('location', 'coords')
                                 )
 
@@ -905,7 +903,6 @@ def build_output_modality_embeddings(modality_info, modalities, img_size=None, d
         modality_renamed = (modality.lower()
                             .replace('s2', 'sen2')
                             .replace('s1', 'sen1')
-                            .replace('text', 'caption')
                             .replace('location', 'coords')
                             )
 
