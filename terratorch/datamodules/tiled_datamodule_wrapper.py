@@ -133,7 +133,7 @@ def create_variable_tile_collate_fn():
                                 pad_h = max_h - v.shape[0]
                                 pad_w = max_w - v.shape[1]
                                 # Pad format: (left, right, top, bottom)
-                                padded_v = torch.nn.functional.pad(v, (0, pad_w, 0, pad_h), value=0)
+                                padded_v = torch.nn.functional.pad(v, (0, pad_w, 0, pad_h), value=0).contiguous()
                                 padded.append(padded_v)
                             collated[key] = torch.stack(padded)
                             
@@ -145,7 +145,7 @@ def create_variable_tile_collate_fn():
                             for v in values:
                                 pad_h = max_h - v.shape[1]
                                 pad_w = max_w - v.shape[2]
-                                padded_v = torch.nn.functional.pad(v, (0, pad_w, 0, pad_h), value=0)
+                                padded_v = torch.nn.functional.pad(v, (0, pad_w, 0, pad_h), value=0).contiguous()
                                 padded.append(padded_v)
                             collated[key] = torch.stack(padded)
                             
@@ -157,9 +157,9 @@ def create_variable_tile_collate_fn():
                             for v in values:
                                 pad_h = max_h - v.shape[2]
                                 pad_w = max_w - v.shape[3]
-                                padded_v = torch.nn.functional.pad(v, (0, pad_w, 0, pad_h), value=0)
+                                padded_v = torch.nn.functional.pad(v, (0, pad_w, 0, pad_h), value=0).contiguous()
                                 padded.append(padded_v)
-                            collated[key] = torch.cat(padded, dim=0)  # Concat along batch dim
+                            collated[key] = torch.cat(padded, dim=0).contiguous()  # Concat along batch dim
                         else:
                             # For other tensor dims, try default stack
                             collated[key] = torch.stack(values)
