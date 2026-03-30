@@ -52,7 +52,7 @@ dependencies = [
   "rasterio",
   "torchmetrics",
   "geopandas",
-  "lightly==1.5.22",
+  "lightly==1.5.23",
   "h5py",
   "lightning>=2.6.0",
   "segmentation-models-pytorch>=0.5.0",
