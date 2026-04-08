@@ -169,6 +169,9 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 norecursedirs = [".venv", "build", "dist", "site-packages"]
+markers = [
+  "slow: resource-intensive tests excluded from default CI",
+]
 
 [tool.black]
 target-version = ["py310"]

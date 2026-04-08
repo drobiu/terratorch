@@ -15,6 +15,8 @@ from terratorch.models.object_detection_model_factory import (
 )
 from terratorch.tasks.object_detection_task import ObjectDetectionTask
 
+pytestmark = pytest.mark.slow
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
