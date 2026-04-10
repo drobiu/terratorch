@@ -90,7 +90,8 @@ dev = [
   "mkdocstrings[python]",
   "mike", # for building docs with versions
   "mkdocs-git-revision-date-localized-plugin",
-  "pre-commit"
+  "pre-commit",
+    "ruff"
 ]
 
 test = [
