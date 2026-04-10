@@ -172,19 +172,17 @@ norecursedirs = [".venv", "build", "dist", "site-packages"]
 [tool.ruff]
 target-version = "py311"
 line-length = 120
+
+[tool.ruff.lint]
 select = [
   "A",
   "ARG",
   "B",
   "C",
-  "DTZ",
   "E",
-  "EM",
   "F",
   "FBT",
   "I",
-  "ICN",
-  "ISC",
   "N",
   "PLC",
   "PLE",
@@ -197,7 +195,6 @@ select = [
   "TID",
   "UP",
   "W",
-  "YTT",
 ]
 ignore = [
   # Allow non-abstract empty methods in abstract base classes
@@ -207,24 +204,27 @@ ignore = [
   # Ignore checks for possible passwords
   "S105", "S106", "S107",
   # Ignore complexity
-  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004",
+  # Allow non-lower case aliases and variables in functions
+  "N812", "N806",
 ]
 unfixable = [
   # Don't touch unused imports
   "F401",
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["terratorch"]
 
-[tool.ruff.flake8-tidy-imports]
+[tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 # Tests can use magic values, assertions, and relative imports
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 # Tasks rely on torch lightning saving args to hparams dict
-"terratorch/tasks/*" = ["ARG002"]
+"terratorch/tasks/*" = ["ARG001", "ARG002"]
+"terratorch/datamodules/*" = ["ARG001", "ARG002"]
 
 [tool.coverage.run]
 source_pkgs = ["terratorch", "tests"]
