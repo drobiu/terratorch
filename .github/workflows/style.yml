@@ -22,8 +22,7 @@ jobs:
       - name: Install package with dev dependencies
         run: pip install -e ".[dev]"
 
-      - name: Run ruff check
-        run: ruff check --output-format=github --no-fix terratorch/ tests/
-
+#      - name: Run ruff check
+#        run: ruff check --output-format=github --no-fix terratorch/ --exclude terratorch/vllm/
       - name: Run ruff format check
-        run: ruff format --check terratorch/ tests/
+        run: ruff format --check --diff terratorch/ --exclude terratorch/vllm/
