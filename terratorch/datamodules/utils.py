@@ -196,15 +196,14 @@ class Normalize(Callable):
         >>> restored = norm_denorm({"image": normalized["image"]})
     """
 
-    def __init__(self, means, stds, denormalize: bool = False):
+    def __init__(self, means, stds):
         super().__init__()
 
         # Convert to torch tensors for consistent handling
         self.means = torch.tensor(means) if not isinstance(means, torch.Tensor) else means.clone()
         self.stds = torch.tensor(stds) if not isinstance(stds, torch.Tensor) else stds.clone()
-        self.denormalize = denormalize
 
-    def __call__(self, batch):
+    def __call__(self, batch, denormalize: bool = False):
         """
         Apply normalization to batch images.
 
@@ -251,7 +250,7 @@ class Normalize(Callable):
             raise ValueError(msg)
 
         # Apply normalization or denormalization
-        if self.denormalize:
+        if denormalize:
             batch["image"] = image * stds + means
         else:
             batch["image"] = (image - means) / stds
