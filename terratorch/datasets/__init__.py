@@ -11,6 +11,9 @@ from terratorch.datasets.generic_multimodal_dataset import (
     GenericMultimodalScalarDataset,
     GenericMultimodalSegmentationDataset,
 )
+from terratorch.datasets.generic_nongeo_od_dataset import (
+    GenericNonGeoObjectDetectionDataset,
+)
 from terratorch.datasets.generic_pixel_wise_dataset import (
     GenericNonGeoPixelwiseRegressionDataset,
     GenericNonGeoSegmentationDataset,
@@ -68,6 +71,7 @@ __all__ = (
     "GenericNonGeoSegmentationDataset",
     "GenericNonGeoPixelwiseRegressionDataset",
     "GenericNonGeoClassificationDataset",
+    "GenericNonGeoObjectDetectionDataset",
     # "GenericNonGeoRegressionDataset",
     "GenericMultimodalDataset",
     "GenericMultimodalSegmentationDataset",
