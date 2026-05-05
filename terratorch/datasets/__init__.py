@@ -52,6 +52,7 @@ from terratorch.datasets.sen1floods11 import Sen1Floods11NonGeo
 
 # from terratorch.datasets.sen1floods11 import Sen1Floods11NonGeo
 from terratorch.datasets.sen4agrinet import Sen4AgriNet
+from terratorch.datasets.tiled_dataset_wrapper import TiledDataset
 
 # Generic Classification Dataset
 from terratorch.datasets.sen4map import Sen4MapDatasetMonthlyComposites
@@ -105,6 +106,7 @@ __all__ = (
     "OpenSentinelMap",
     "PASTIS",
     "Sen4AgriNet",
+    "TiledDataset",
     "WSF2019",
     "WSFEvolution",
     "HLSL30",

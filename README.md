@@ -17,15 +17,15 @@
 
 [![huggingface](https://img.shields.io/badge/Hugging_Face-join-FFD21E?logo=huggingface)](https://huggingface.co/ibm-nasa-geospatial)
 [![pypi](https://badge.fury.io/py/terratorch.svg)](https://pypi.org/project/terratorch)
-[![tests](https://github.com/terrastackai/terratorch/actions/workflows/test.yaml/badge.svg)](https://github.com/terrastackai/terratorch/actions/workflows/test.yaml)
-[![MkDocs](https://img.shields.io/badge/MkDocs-526CFE?logo=materialformkdocs&logoColor=fff)](https://terrastackai.github.io/terratorch/)
+[![tests](https://github.com/torchgeo/terratorch/actions/workflows/tests.yaml/badge.svg)](https://github.com/torchgeo/terratorch/actions/workflows/tests.yaml)
+[![MkDocs](https://img.shields.io/badge/MkDocs-526CFE?logo=materialformkdocs&logoColor=fff)](https://torchgeo.github.io/terratorch/)
 <!--
-![cov](https://github.com/terrastackai/terratorch/raw/main/assets/coverage-badge.svg)
+![cov](https://github.com/torchgeo/terratorch/raw/main/assets/coverage-badge.svg)
 -->
 [![PyPI Downloads](https://img.shields.io/pypi/dm/terratorch.svg?label=PyPI%20downloads)](https://pypi.org/project/terratorch/)
 [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/terratorch.svg?label=Conda%20downloads)](https://anaconda.org/conda-forge/terratorch)
 
-Please, read the contribution guidelines (see `Contribution` below) if you want to contribute to
+Please read the contribution guidelines (see `Contribution` below) if you want to contribute to
 TerraTorch.
 
 ## Overview
@@ -80,8 +80,8 @@ In order to use the file `pyproject.toml` it is necessary to guarantee `pip>=21.
 
 For a stable point-release, use `pip install terratorch==<version>`.
 
-[comment]: <If you prefer to get the most recent version of the main branch, install the library with `pip install git+https://github.com/terrastackai/terratorch.git`.>
-To get the most recent version of the branch `main`, install the library with `pip install git+https://github.com/terrastackai/terratorch.git`.
+[comment]: <If you prefer to get the most recent version of the main branch, install the library with `pip install git+https://github.com/torchgeo/terratorch.git`.>
+To get the most recent version of the branch `main`, install the library with `pip install git+https://github.com/torchgeo/terratorch.git`.
 
 ### Conda
 TerraTorch is also available on `conda-forge`, to install from there do `conda install -c conda-forge terratorch`. 
@@ -98,7 +98,7 @@ are installing from `conda-forge` it probably won't be a problem.
 ### Install as a developer
 To install as a developer (e.g. to extend the library):
 ```
-git clone https://github.com/terrastackai/terratorch.git
+git clone https://github.com/torchgeo/terratorch.git
 cd terratorch
 pip install -e .[test]
 ```
@@ -106,9 +106,10 @@ To install terratorch with partial (work in development) support for Weather Fou
 
 ## Documentation
 
-To get started, check out the [quick start guide](https://terrastackai.github.io/terratorch/quick_start).
+To get started, check out the [quick start guide](https://torchgeo.github.io/terratorch/quick_start).
 
-Developers, check out the [architecture overview](https://terrastackai.github.io/terratorch/architecture).
+Developers, check out the [architecture overview](https://torchgeo.github.io/terratorch/architecture).
+
 
 [TerraTorch: The Geospatial Foundation Models Toolkit on arXiv](https://arxiv.org/abs/2503.20563)
 ## Contributing
@@ -116,11 +117,11 @@ Developers, check out the [architecture overview](https://terrastackai.github.io
 This project welcomes contributions and suggestions. Ways to contribute or get involved:
 
 - Join our [Discord](https://discord.gg/vQXTNmrkTM)
-- Create an [Issue](https://github.com/terrastackai/terratorch/issues) (for bugs or feature requests)
-- Contribute via [PR](https://github.com/terrastackai/terratorch/pulls)
+- Create an [Issue](https://github.com/torchgeo/terratorch/issues) (for bugs or feature requests)
+- Contribute via [PR](https://github.com/torchgeo/terratorch/pulls)
 - Join our [duoweekly](https://romeokienzler.medium.com/the-duoweekly-manifesto-eaa6c1f542c8) community calls taking place [Tuesdays 4:30 PM - 5 PM CEST](https://teams.microsoft.com/l/meetup-join/19%3ameeting_MWJhMThhMTMtMjc3MS00YjAyLWI3NTMtYTI0NDQ3NWY3ZGU2%40thread.v2/0?context=%7b%22Tid%22%3a%22fcf67057-50c9-4ad4-98f3-ffca64add9e9%22%2c%22Oid%22%3a%227f7ab87a-680c-4c93-acc5-fbd7ec80823a%22%7d) and [Thursdays 2:30 PM - 3 PM CEST](https://teams.microsoft.com/l/meetup-join/19%3ameeting_MWJhMThhMTMtMjc3MS00YjAyLWI3NTMtYTI0NDQ3NWY3ZGU2%40thread.v2/0?context=%7b%22Tid%22%3a%22fcf67057-50c9-4ad4-98f3-ffca64add9e9%22%2c%22Oid%22%3a%227f7ab87a-680c-4c93-acc5-fbd7ec80823a%22%7d).
 
-You can find more detailed contribution guidelines [here](https://terrastackai.github.io/terratorch/stable/contributing/). 
+You can find more detailed contribution guidelines [here](https://torchgeo.github.io/terratorch/stable/contributing/). 
 
 If you want to meet the GitHub DCO checks, you **need** to do your commits as below:
 ```
