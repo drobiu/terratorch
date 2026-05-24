@@ -102,7 +102,22 @@ git clone https://github.com/torchgeo/terratorch.git
 cd terratorch
 pip install -e .[test]
 ```
-To install terratorch with partial (work in development) support for Weather Foundation Models, `pip install -e .[wxc]`, which currently works just for `Python >= 3.11`. 
+
+### Optional Dependencies
+
+TerraTorch supports several optional features that can be installed separately:
+
+- **VLLM support**: `pip install terratorch[vllm]`
+- **Weather Foundation Models**: `pip install terratorch[wxc]` (Python >= 3.11 only)
+- **PEFT (Parameter-Efficient Fine-Tuning)**: `pip install terratorch[peft]`
+- **Visualization tools**: `pip install terratorch[visualize]`
+- **GeoBench v2**: `pip install terratorch[geobenchv2]`
+- **Logging with Weights & Biases**: `pip install terratorch[logging]`
+- **MMSegmentation support**: `pip install terratorch[mmseg]`
+- **Surya support**: `pip install terratorch[surya]`
+- **Tortilla file support**: `pip install terratorch[tortilla]` - Required for loading datasets from tortilla files
+
+You can install multiple optional dependencies at once: `pip install terratorch[vllm,peft,logging]`
 
 ## Documentation
 
