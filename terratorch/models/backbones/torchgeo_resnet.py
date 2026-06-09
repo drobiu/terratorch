@@ -8,8 +8,7 @@ from typing import List
 import huggingface_hub
 import torch
 from torch import nn
-from torchgeo.models import resnet
-from torchgeo.models.resnet import ResNet18_Weights, ResNet50_Weights, ResNet152_Weights, resnet18, resnet50, resnet152
+from torchgeo.models import ResNet18_Weights, ResNet50_Weights, ResNet152_Weights, resnet18, resnet50, resnet152
 from torchvision.models._api import Weights, WeightsEnum
 
 from terratorch.datasets.utils import OpticalBands, SARBands

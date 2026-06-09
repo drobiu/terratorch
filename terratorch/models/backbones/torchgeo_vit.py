@@ -8,7 +8,7 @@ from typing import List
 import huggingface_hub
 import torch
 from torch import nn
-from torchgeo.models.vit import ViTSmall16_Weights, vit_small_patch16_224
+from torchgeo.models import ViTSmall16_Weights, vit_small_patch16_224
 from torchvision.models._api import Weights, WeightsEnum
 
 from terratorch.models.backbones.select_patch_embed_weights import select_patch_embed_weights
