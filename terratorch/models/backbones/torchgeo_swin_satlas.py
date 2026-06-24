@@ -8,8 +8,7 @@ from typing import List
 import huggingface_hub
 import torch
 from torch import nn
-from torchgeo.models import swin
-from torchgeo.models.swin import Swin_V2_B_Weights, Swin_V2_T_Weights
+from torchgeo.models import Swin_V2_B_Weights, Swin_V2_T_Weights
 from torchvision.models import swin_v2_b, swin_v2_t
 from torchvision.models._api import Weights, WeightsEnum
 
