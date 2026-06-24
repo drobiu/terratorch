@@ -125,8 +125,7 @@ class TerraMindGeneration(nn.Module):
 
         # Init embeddings
         self.encoder_embeddings, mod_name_mapping = build_modality_embeddings(
-            MODALITY_INFO, modalities, cond_modalities=output_modalities[:-1], img_size=img_size, dim=dim,
-            patch_size=patch_size
+            MODALITY_INFO, modalities, img_size=img_size, dim=dim, patch_size=patch_size
         )
         self.decoder_embeddings, decoder_name_mapping = build_output_modality_embeddings(
             MODALITY_INFO, output_modalities, img_size=img_size, dim=dim, patch_size=patch_size
@@ -216,10 +215,11 @@ class TerraMindGeneration(nn.Module):
 
     def forward(
         self,
-        d: dict[str, torch.Tensor] | torch.Tensor | None = None,
+        orig_input: dict[str, torch.Tensor] | torch.Tensor | None = None,
         standardize: bool | None = None,
         timesteps: int = None,
         verbose: bool = False,
+        mask = None,
         **kwargs,
     ) -> dict[str, torch.Tensor]:
         """
@@ -233,36 +233,38 @@ class TerraMindGeneration(nn.Module):
         Returns:
             dict[str, torch.Tensor]: Dict of generated images
         """
+
+        # print('start')
         # Handle single image modality
-        if not isinstance(d, dict):
+        if not isinstance(orig_input, dict):
             # Assuming first modality
-            d = {self.modalities[0]: d}
-        elif d is None or len(d) == 0:
-            d = {}
+            orig_input = {self.modalities[0]: orig_input}
+        elif orig_input is None or len(orig_input) == 0:
+            orig_input = {}
             if len(kwargs) == 0:
                 raise ValueError("No inputs provided.")
 
         # Add additional keyword args to input dict
         for key, value in kwargs.items():
-            d[key] = value
+            orig_input[key] = value
 
         # Check for unknown modalities in input
-        for mod in list(d.keys()):
+        for mod in list(orig_input.keys()):
             if mod not in self.mod_name_mapping:
                 warnings.warn(f"Unknown input modality: {mod}. Ignoring input.")
-                del d[mod]
-        if len(d) == 0:
+                del orig_input[mod]
+        if len(orig_input) == 0:
             raise ValueError("No valid inputs provided.")
 
         # Get batch size and device
-        batch_size = len(list(d.values())[0])
+        batch_size = len(list(orig_input.values())[0])
         device = next(self.parameters()).device
 
         standardize = standardize if standardize is not None else self.standardize
         if standardize:
-            for mod, value in d.items():
+            for mod, value in orig_input.items():
                 if self.mod_name_mapping[mod] in self.pretraining_mean:
-                    d[mod] = (value - self.pretraining_mean[self.mod_name_mapping[mod]]) / self.pretraining_std[
+                    orig_input[mod] = (value - self.pretraining_mean[self.mod_name_mapping[mod]]) / self.pretraining_std[
                         self.mod_name_mapping[mod]
                     ]
 
@@ -270,11 +272,12 @@ class TerraMindGeneration(nn.Module):
         input_dict = {}
         # Default values if no images are provided
         img_num_tokens, image_size = 196, (224, 224)
-        for mod, value in d.items():
+        for mod, value in orig_input.items():
             if self.mod_name_mapping[mod] in self.image_modalities:
                 input_shape = value.shape
             if self.mod_name_mapping[mod] in self.tokenizer:
                 # Tokenize
+                # print('tokenizing', mod)
                 value = self.tokenizer[self.mod_name_mapping[mod]].encode(value, device)
                 if not isinstance(value, dict):
                     value = value[-1]  # Select tokens from img tokenizer
@@ -297,6 +300,11 @@ class TerraMindGeneration(nn.Module):
             input_dict[self.mod_name_mapping[mod]] = init_full_input_modality(
                 value, MODALITY_INFO, self.mod_name_mapping[mod], device
             )
+
+            if mask is not None:
+                input_dict[self.mod_name_mapping[mod]]['input_mask'] = mask[self.mod_name_mapping[mod]].logical_not()
+
+        # print(input_dict)
 
         # Initialize output modalities
         tokens_per_target = []
@@ -326,7 +334,7 @@ class TerraMindGeneration(nn.Module):
 
         # Predict tokens of output modalities
         schedule = build_chained_generation_schedules(
-            cond_domains=[self.mod_name_mapping[m] for m in d.keys()],
+            cond_domains=[self.mod_name_mapping[m] for m in orig_input.keys()],
             target_domains=self.output_modalities,
             tokens_per_target=tokens_per_target,
             autoregression_schemes=autoregression_schemes,
@@ -339,6 +347,10 @@ class TerraMindGeneration(nn.Module):
             cfg_grow_conditioning=True,
         )
 
+        # print(input_dict)
+
+        # print(input_dict['untok_sen2l1c@224']["tensor"].shape)
+
         out_dict = self.sampler.generate(
             input_dict,
             schedule,
@@ -349,6 +361,197 @@ class TerraMindGeneration(nn.Module):
             num_tokens=sum(tokens_per_target),
             tokenizer=self.tokenizer,
         )
+
+        # print(out_dict)
+
+        # TODO Vary timesteps based on codebook diversity
+        timesteps = timesteps or self.timesteps
+        out = {}
+        for mod in self.output_modalities:
+            tok = out_dict[mod]["tensor"]
+            if mod in self.output_image_modalities:
+                patch_size = self.tokenizer[mod].patch_size
+                tok = rearrange(
+                    tok, "b (nh nw) -> b nh nw", nh=image_size[0] // patch_size, nw=image_size[1] // patch_size
+                )
+
+                out[self.output_mod_name_mapping[mod]] = self.tokenizer[mod].decode_tokens(
+                    tok, image_size=image_size, timesteps=timesteps, verbose=verbose
+                )
+
+            elif mod in self.output_modalities and mod in ["caption", "coords"]:
+                out[self.output_mod_name_mapping[mod]] = self.tokenizer[mod].decode_text(out_dict)
+
+        if standardize:
+            for mod, value in out.items():
+                if self.mod_name_mapping[mod] in self.pretraining_mean:
+                    out[mod] = (
+                        value * self.pretraining_std[self.mod_name_mapping[mod]]
+                        + self.pretraining_mean[self.mod_name_mapping[mod]]
+                    )
+
+        return out
+
+    def forward_tokenizer(
+        self,
+        orig_input: dict[str, torch.Tensor] | torch.Tensor | None = None,
+        standardize: bool | None = None,
+        timesteps: int = None,
+        verbose: bool = False,
+        **kwargs,
+    ) -> dict[str, torch.Tensor]:
+        """
+        Forward pass of the model.
+
+        Args:
+            d (dict, torch.Tensor): Dict of inputs or input tensor with shape (B, C, H, W)
+
+            Alternatively, keyword arguments with modality=tensor.
+
+        Returns:
+            dict[str, torch.Tensor]: Dict of generated images
+        """
+
+        # print('start')
+        # Handle single image modality
+        if not isinstance(orig_input, dict):
+            # Assuming first modality
+            orig_input = {self.modalities[0]: orig_input}
+        elif orig_input is None or len(orig_input) == 0:
+            orig_input = {}
+            if len(kwargs) == 0:
+                raise ValueError("No inputs provided.")
+
+        # Add additional keyword args to input dict
+        for key, value in kwargs.items():
+            orig_input[key] = value
+
+        # Check for unknown modalities in input
+        for mod in list(orig_input.keys()):
+            if mod not in self.mod_name_mapping:
+                warnings.warn(f"Unknown input modality: {mod}. Ignoring input.")
+                del orig_input[mod]
+        if len(orig_input) == 0:
+            raise ValueError("No valid inputs provided.")
+
+        # Get batch size and device
+        batch_size = len(list(orig_input.values())[0])
+        device = next(self.parameters()).device
+
+        standardize = standardize if standardize is not None else self.standardize
+        if standardize:
+            for mod, value in orig_input.items():
+                if self.mod_name_mapping[mod] in self.pretraining_mean:
+                    orig_input[mod] = (value - self.pretraining_mean[self.mod_name_mapping[mod]]) / self.pretraining_std[
+                        self.mod_name_mapping[mod]
+                    ]
+
+        # Define the initial input
+        input_dict = {}
+        # Default values if no images are provided
+        img_num_tokens, image_size = 196, (224, 224)
+        for mod, value in orig_input.items():
+            if self.mod_name_mapping[mod] in self.image_modalities:
+                input_shape = value.shape
+            if self.mod_name_mapping[mod] in self.tokenizer:
+                # Tokenize
+                # print('tokenizing', mod)
+                value = self.tokenizer[self.mod_name_mapping[mod]].encode(value, device)
+                if not isinstance(value, dict):
+                    value = value[-1]  # Select tokens from img tokenizer
+
+            if self.mod_name_mapping[mod] in self.image_modalities:
+                # Get image size and num tokens
+                patch_size = self.encoder_embeddings[self.mod_name_mapping[mod]].patch_size
+                img_num_tokens = int((input_shape[-1] / patch_size[-1]) * (input_shape[-2] / patch_size[-2]))
+                image_size = (input_shape[-1], input_shape[-2])
+
+                # Init raw image input masks
+                value = {
+                    "tensor": value,
+                    "input_mask": torch.zeros(batch_size, img_num_tokens, dtype=torch.bool, device=device),
+                    "target_mask": torch.ones(batch_size, img_num_tokens, dtype=torch.bool, device=device),
+                    "decoder_attention_mask": torch.zeros(batch_size, img_num_tokens, dtype=torch.bool, device=device),
+                }
+
+            # Encode input and provide expected format
+            input_dict[self.mod_name_mapping[mod]] = init_full_input_modality(
+                value, MODALITY_INFO, self.mod_name_mapping[mod], device
+            )
+
+
+        return input_dict
+    
+    def forward_tokenized(self, 
+        input_dict, 
+        orig_input, 
+        verbose: bool = False,
+        timesteps: int = None,
+        standardize: bool | None = None,
+    ):
+
+
+        img_num_tokens, image_size = 196, (224, 224)
+        batch_size = len(list(orig_input.values())[0])
+        device = next(self.parameters()).device
+
+        # Initialize output modalities
+        tokens_per_target = []
+        autoregression_schemes = []
+        token_decoding_schedules = []
+        token_decoding_steps = []
+
+        for mod in self.output_modalities:
+            if mod in self.output_image_modalities:
+                mod_num_tokens = img_num_tokens
+                autoregression_schemes.append("roar")
+                token_decoding_schedules.append("linear")
+                token_decoding_steps.append(self.decoding_steps)
+            else:
+                # Get max length from modality info for sequence data
+                mod_num_tokens = self.decoder_embeddings[mod].max_length
+                autoregression_schemes.append("autoregressive")
+                token_decoding_schedules.append(None)
+                token_decoding_steps.append(None)
+            tokens_per_target.append(mod_num_tokens)
+
+            if mod in input_dict:
+                # Modality in input and target
+                input_dict[mod] = init_conditioned_target_modality(input_dict[mod], MODALITY_INFO, mod, mod_num_tokens)
+            else:
+                input_dict[mod] = init_empty_target_modality(MODALITY_INFO, mod, batch_size, mod_num_tokens, device)
+
+        # Predict tokens of output modalities
+        schedule = build_chained_generation_schedules(
+            cond_domains=[self.mod_name_mapping[m] for m in orig_input.keys()],
+            target_domains=self.output_modalities,
+            tokens_per_target=tokens_per_target,
+            autoregression_schemes=autoregression_schemes,
+            decoding_steps=token_decoding_steps,
+            token_decoding_schedules=token_decoding_schedules,
+            temps=[self.temps] * len(self.output_modalities),
+            temp_schedules=["constant"] * len(self.output_modalities),
+            cfg_scales=[1.0] * len(self.output_modalities),
+            cfg_schedules=["constant"] * len(self.output_modalities),
+            cfg_grow_conditioning=True,
+        )
+
+        # print(input_dict)
+
+        # print(input_dict['untok_sen2l1c@224']["tensor"].shape)
+
+        out_dict = self.sampler.generate(
+            input_dict,
+            schedule,
+            verbose=False,
+            seed=random.randint(-(2**31), 2**31 - 1),
+            top_p=self.top_p,
+            top_k=self.top_k,
+            num_tokens=sum(tokens_per_target),
+            tokenizer=self.tokenizer,
+        )
+
+        # print(out_dict)
 
         # TODO Vary timesteps based on codebook diversity
         timesteps = timesteps or self.timesteps
